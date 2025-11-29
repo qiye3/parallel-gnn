@@ -7,7 +7,7 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader, DistributedSampler
 
-from core.data.datasets import InteractionDataset
+from core.loader.datasets import InteractionDataset
 from core.sampler.collate_fn import collate_subgraphs
 from core.sampler.neighbor_sampler import NeighborSampler
 from core.models.graphsage import GraphSAGERecommender

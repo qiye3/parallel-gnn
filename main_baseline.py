@@ -4,8 +4,8 @@ import numpy as np
 import torch
 
 from core.config import Config
-from core.data.datasets import InteractionDataset
-from core.data.utils_io import load_graph
+from core.loader.datasets import InteractionDataset
+from core.loader.utils_io import load_graph
 from core.sampler.neighbor_sampler import NeighborSampler
 from core.sampler.collate_fn import collate_subgraphs
 from core.models.graphsage import GraphSAGERecommender

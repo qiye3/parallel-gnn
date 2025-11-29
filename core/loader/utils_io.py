@@ -1,4 +1,4 @@
-# core/data/utils_io.py
+# core/loader/utils_io.py
 
 import numpy as np
 

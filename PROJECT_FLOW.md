@@ -13,7 +13,7 @@
 parallel-gnn/
 ├── core/                    # 核心模块
 │   ├── config.py           # 配置类
-│   ├── data/               # 数据处理
+│   ├── loader/              # 数据加载
 │   │   ├── build_graph.py  # 图构建
 │   │   ├── datasets.py     # 数据集类
 │   │   └── utils_io.py     # IO工具
@@ -62,7 +62,7 @@ parallel-gnn/
 5. 保存处理后的数据为 Parquet 格式
 
 **关键文件**:
-- `core/data/build_graph.py`: `build_user_item_graph()`
+- `core/loader/build_graph.py`: `build_user_item_graph()`
 - `scripts/run_build_graph.py`: 执行脚本
 
 **输出文件**:
@@ -114,7 +114,7 @@ python scripts/run_build_graph.py
 #### 3.1 数据集创建
 **目标**: 创建交互数据集
 
-**数据集类** (`core/data/datasets.py`):
+**数据集类** (`core/loader/datasets.py`):
 - `InteractionDataset`: 从 Parquet 文件加载用户-物品交互
 - 每个样本返回: `(用户ID, 正样本物品ID, 负样本物品ID)`
 

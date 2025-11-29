@@ -2,7 +2,7 @@
 
 import torch
 from torch.utils.data import DataLoader
-from core.data.datasets import InteractionDataset
+from core.loader.datasets import InteractionDataset
 from core.sampler.collate_fn import collate_subgraphs
 from core.sampler.neighbor_sampler import NeighborSampler
 

@@ -1,4 +1,4 @@
-# core/data/build_graph.py
+# core/loader/build_graph.py
 
 import os
 import pandas as pd

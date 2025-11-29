@@ -11,7 +11,7 @@
 ```
 scripts/run_build_graph.py
     │
-    └─> core/data/build_graph.py::build_user_item_graph()
+    └─> core/loader/build_graph.py::build_user_item_graph()
             │
             ├─> remap_ids_full()
             │       │
@@ -52,7 +52,7 @@ main_baseline.py::main()
     │
     ├─> load_graph()
     │       │
-    │       └─> core/data/utils_io.py::load_graph()
+    │       └─> core/loader/utils_io.py::load_graph()
     │               ├─> np.load("data/graph/edge_list.npy")
     │               └─> np.load("data/graph/num_info.npy")
     │
@@ -63,7 +63,7 @@ main_baseline.py::main()
     │
     ├─> InteractionDataset("data/processed/train.parquet", num_items)
     │       │
-    │       └─> core/data/datasets.py::__init__()
+    │       └─> core/loader/datasets.py::__init__()
     │               └─> pd.read_parquet()
     │
     ├─> GraphSAGERecommender(num_users, num_items, ...)
