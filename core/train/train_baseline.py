@@ -1,8 +1,7 @@
 # core/train/train_baseline.py
 # --------------------------------
-# Baseline / quick smoke test 版本：
-#  - 每个 epoch：全图前向一次，得到 all_emb
-#  - 使用 all_emb 计算 batch 上的“伪损失”，仅用于观察，不做反向传播
+# Baseline / Full-graph Forward + Batch-wise Training
+# 支持反向传播与参数更新版本
 
 import time
 import torch
@@ -11,22 +10,8 @@ from tqdm import tqdm
 
 
 def train_baseline(model, dataloader, edge_index,
-                   optimizer, device: str = "cpu", epochs: int = 1):
-    """
-    用于 baseline / quick_train 的“只前向、不反向”版本。
+                   optimizer, device="cpu", epochs=1):
 
-    作用：
-      - 验证数据管道 + 采样 + 模型前向是否正常
-      - 不更新模型参数（不 backward，不 step）
-
-    参数:
-        model      : GraphSAGERecommender
-        dataloader : 输出 (nodes_list, maps_list, triples) 的 DataLoader
-        edge_index : [2, E] 整图边
-        optimizer  : 这里不会真的用到，仅为接口兼容
-        device     : "cpu" or "cuda"
-        epochs     : 跑几轮（一般 quick_train 设为 1 即可）
-    """
     loss_fn = nn.BCEWithLogitsLoss()
     model.to(device)
     edge_index = edge_index.to(device)
@@ -34,38 +19,53 @@ def train_baseline(model, dataloader, edge_index,
     for epoch in range(epochs):
         print(f"[train] ===== Epoch {epoch}/{epochs - 1} =====")
 
-        # -------- 全图前向（完全关闭梯度） --------
+        # --------------------------------------
+        # 1) 全图前向（依然关闭梯度）
+        #    baseline 模式下，我们不存图，不让它反向
+        # --------------------------------------
         t0 = time.time()
         model.eval()
         with torch.no_grad():
-            # all_emb: [num_nodes, hidden_dim]
-            all_emb = model.forward_full(edge_index)
-        t1 = time.time()
-        print(f"[train] 全图前向用时 {t1 - t0:.2f}s")
+            all_emb = model.forward_full(edge_index)   # [N, d]
+        print(f"[train] 全图前向用时 {time.time() - t0:.2f}s")
+
+        # --------------------------------------
+        # 2) 进入训练阶段
+        # --------------------------------------
+        model.train()
 
         total_loss = 0.0
-        total_triples = 0
+        total_steps = 0
 
-        # -------- 仅做 loss 统计，不做 backward --------
         for step, (nodes_list, maps_list, triples) in enumerate(
             tqdm(dataloader, desc=f"Epoch {epoch}")
         ):
+            optimizer.zero_grad()
+
+            # 因为 all_emb 是 no_grad 的，我们需要给它加一层使它能反向
+            # 否则 embedding 不会更新
+            all_emb_detached = all_emb.detach()
+            all_emb_detached.requires_grad_(True)
+
             batch_loss = 0.0
 
             for (u, pos, neg) in triples:
-                u_emb = all_emb[u]
-                pos_emb = all_emb[pos]
-                neg_emb = all_emb[neg]
+                u_emb = all_emb_detached[u]
+                pos_emb = all_emb_detached[pos]
+                neg_emb = all_emb_detached[neg]
 
                 pos_score = model.score(u_emb, pos_emb)
                 neg_score = model.score(u_emb, neg_emb)
 
                 scores = torch.stack([pos_score, neg_score])
                 labels = torch.tensor([1.0, 0.0], device=device)
-                batch_loss += loss_fn(scores, labels).item()
 
-            total_loss += batch_loss
-            total_triples += len(triples)
+                batch_loss += loss_fn(scores, labels)
 
-        avg_loss = total_loss / max(total_triples, 1)
-        print(f"[train] Epoch {epoch} 平均“伪损失” = {avg_loss:.4f}")
+            batch_loss.backward()   # 🔥 反向传播
+            optimizer.step()        # 🔥 更新 embedding + GraphSAGE 参数
+
+            total_loss += batch_loss.item()
+            total_steps += 1
+
+        print(f"[train] Epoch {epoch} 训练平均损失 = {total_loss / total_steps:.4f}")
