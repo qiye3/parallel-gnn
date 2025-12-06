@@ -20,19 +20,19 @@ class Config:
     num_layers = 2
     # GraphSAGE 采样的邻居数配置，列表长度 = 层数
     # 如 [15, 10] 表示：第 1 层采 15 个邻居，第 2 层采 10 个邻居
-    num_neighbors = [15, 10]
+    num_neighbors = [10, 5]
 
     # ===== 训练相关配置 =====
     # 学习率
     lr = 1e-3
     # 每个 batch 中的交互样本数
     # batch_size = 1024
-    batch_size = 16
+    batch_size = 512
     # 训练的总 epoch 数
-    epochs = 4
+    epochs = 5
 
     # ===== 评估相关配置 =====
     # 评估时的 Top-K
     K = 10
     # 每个正样本对应采样的负样本数量
-    num_neg = 100
+    num_neg = 50
